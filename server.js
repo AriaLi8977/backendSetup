@@ -1,11 +1,43 @@
-const express = require('express')
-const app = express()
-const expressLayouts = require('express-ejs-layouts')
+const express = require('express');
+const app = express();
 
-app.set('view engine','ejs')
-app.set('views',__dirname + '/views')
-app.set('layout','layouts/layout')
-app.use(expressLayouts)
-app.use(express.static('public'))
+const { quotes } = require('./data');
+const { getRandomElement } = require('./utils');
 
-app.listen(process.env.PORT || 3000)
+const PORT = process.env.PORT || 4001;
+
+app.use(express.static('public'));
+
+app.get('/api/quotes/random',(req, res)=>{
+    res.send(getRandomElement(quotes));
+})
+
+app.get('/api/quotes',(req,res)=>{
+    const requestStr = req.query.person;
+    if(!requestStr){
+        res.send(quotes);
+    }else{
+        let resArray = quotes.filter((q)=>q.person === requestStr);
+        res.send(resArray);
+    }
+})
+
+app.post('/api/quotes',(req,res)=>{
+    const newPerson = req.query.person;
+    const newQuote = req.query.quote;
+    if(newPerson && newQuote){
+        const newObj = {
+            quote: newQuote,
+            person: newPerson
+        }
+        quotes.push(newObj);
+        res.send(newObj);
+    }else{
+        res.status(400).send();
+    }
+})
+
+app.listen(PORT, ()=>{
+    console.log('Listening to port: ' + PORT);
+})
+
